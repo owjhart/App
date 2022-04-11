@@ -69,14 +69,6 @@ class LogInWithShortLivedTokenPage extends Component {
         }
 
         Log.info('[LoginWithShortLivedTokenPage] User is signed in');
-
-        // exitTo is URI encoded because it could contain a variable number of slashes (i.e. "workspace/new" vs "workspace/<ID>/card")
-        const exitTo = decodeURIComponent(lodashGet(this.props.route.params, 'exitTo', ''));
-        if (exitTo === ROUTES.WORKSPACE_NEW) {
-            // New workspace creation is handled in AuthScreens, not in its own screen
-            Log.info('[LoginWithShortLivedTokenPage] exitTo is workspace/new - handling new workspace creation in AuthScreens');
-            return;
-        }
         this.navigateToExitRoute();
     }
 
@@ -92,6 +84,11 @@ class LogInWithShortLivedTokenPage extends Component {
 
         // exitTo is URI encoded because it could contain a variable number of slashes (i.e. "workspace/new" vs "workspace/<ID>/card")
         const exitTo = decodeURIComponent(lodashGet(this.props.route.params, 'exitTo', ''));
+        if (exitTo === ROUTES.WORKSPACE_NEW) {
+            // New workspace creation is handled in AuthScreens, not in its own screen
+            Log.info('[LoginWithShortLivedTokenPage] exitTo is workspace/new - handling new workspace creation in AuthScreens');
+            return;
+        }
 
         // In order to navigate to a modal, we first have to dismiss the current modal. Without dismissing the current modal, if the user cancels out of the workspace modal,
         // then they will be routed back to /transition/<accountID>/<email>/<authToken>/workspace/<policyID>/card and we don't want that. We want them to go back to `/`
