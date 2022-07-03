@@ -22,6 +22,9 @@ import compose from './libs/compose';
 import withLocalize, {withLocalizePropTypes} from './components/withLocalize';
 import * as User from './libs/actions/User';
 
+import CONST from './CONST';
+import KeyboardShortcut from './libs/KeyboardShortcut';
+
 Onyx.registerLogger(({level, message}) => {
     if (level === 'alert') {
         Log.alert(message);
@@ -90,6 +93,7 @@ class Expensify extends PureComponent {
             isNavigationReady: false,
             isOnyxMigrated: false,
             isSplashShown: true,
+            isTestModalShown: true,
         };
     }
 
@@ -112,6 +116,15 @@ class Expensify extends PureComponent {
             });
 
         this.appStateChangeListener = AppState.addEventListener('change', this.initializeClient);
+
+        const shortcutConfig = CONST.KEYBOARD_SHORTCUTS.TEST;
+
+        // TODO: remove test code
+        // Press 't' on keyboard to show a test ConfirmModal to quickly reproduce https://github.com/Expensify/App/issues/7968
+        this.unsubscribe = KeyboardShortcut.subscribe(shortcutConfig.shortcutKey, (e) => {
+            console.log(`PROBE:isTestModalShown:key:T:hit`);
+            this.setState({isTestModalShown: !this.state.isTestModalShown});
+        }, shortcutConfig.descriptionKey, shortcutConfig.modifiers, true, true, false, this.props.enterKeyEventListenerPriority, false);
     }
 
     componentDidUpdate(prevProps) {
@@ -136,6 +149,8 @@ class Expensify extends PureComponent {
     }
 
     componentWillUnmount() {
+        if (this.unsubscribe) this.unsubscribe();
+      
         if (!this.appStateChangeListener) { return; }
         this.appStateChangeListener.remove();
     }
@@ -205,6 +220,23 @@ class Expensify extends PureComponent {
                 <NavigationRoot
                     onReady={this.setNavigationReady}
                     authenticated={this.isAuthenticated()}
+                />
+
+                <ConfirmModal
+                    title={'Title'}
+                    onConfirm={() => {
+                      console.log('onConfirm');
+                      this.setState({isTestModalShown: false});
+                    }}
+                    onCancel={() => {
+                      console.log('onCancel');
+                      this.setState({isTestModalShown: false});
+                    }}
+                    prompt={'Prompt'}
+                    confirmText={'ConfirmText'}
+                    cancelText={'CancelText'}
+                    danger
+                    isVisible={this.state.isTestModalShown}
                 />
             </>
         );

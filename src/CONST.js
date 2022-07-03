@@ -188,6 +188,11 @@ const CONST = {
             shortcutKey: 'ArrowDown',
             modifiers: [],
         },
+        TEST: {
+            descriptionKey: 'test',
+            shortcutKey: 'T',
+            modifiers: [],
+        },
     },
     KEYBOARD_SHORTCUT_KEY_DISPLAY_NAME: {
         CONTROL: 'CTRL',
