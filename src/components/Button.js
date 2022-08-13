@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Pressable, ActivityIndicator, View} from 'react-native';
+import {Platform, Pressable, ActivityIndicator, View} from 'react-native';
 import PropTypes from 'prop-types';
 import styles from '../styles/styles';
 import themeColors from '../styles/themes/default';
@@ -152,6 +152,17 @@ class Button extends Component {
             return;
         }
 
+        /** 
+         * Make sure nothing is focused on initial render
+         * so that the 'enter' key listener will trigger straight away after pressing 'enter'.
+         * ref: https://github.com/Expensify/App/issues/7968
+         */
+        if (Platform.OS === 'web') {
+            setTimeout(() => {
+                document.activeElement.blur();
+            }, 100);
+        }
+
         const shortcutConfig = CONST.KEYBOARD_SHORTCUTS.ENTER;
 
         // Setup and attach keypress handler for pressing the button with Enter key
@@ -161,7 +172,7 @@ class Button extends Component {
             }
             e.preventDefault();
             this.props.onPress();
-        }, shortcutConfig.descriptionKey, shortcutConfig.modifiers, true, false, this.props.enterKeyEventListenerPriority, false);
+        }, shortcutConfig.descriptionKey, shortcutConfig.modifiers, false/*captureAlways*/, true, false, this.props.enterKeyEventListenerPriority, false);
     }
 
     componentWillUnmount() {

@@ -13,6 +13,7 @@ class CopySelectionHelper extends React.Component {
             this.copySelectionToClipboard,
             copyShortcutConfig.descriptionKey,
             copyShortcutConfig.modifiers,
+            true/*captureAlways*/,
             false,
         );
     }

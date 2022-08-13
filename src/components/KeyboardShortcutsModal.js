@@ -35,7 +35,7 @@ class KeyboardShortcutsModal extends React.Component {
         const shortcutConfig = CONST.KEYBOARD_SHORTCUTS.SHORTCUT_MODAL;
         this.unsubscribeShortcutModal = KeyboardShortcut.subscribe(shortcutConfig.shortcutKey, () => {
             KeyboardShortcutsActions.showKeyboardShortcutModal();
-        }, shortcutConfig.descriptionKey, shortcutConfig.modifiers, true);
+        }, shortcutConfig.descriptionKey, shortcutConfig.modifiers, true/*captureAlways*/, true);
     }
 
     componentWillUnmount() {

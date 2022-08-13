@@ -61,11 +61,23 @@ function getDisplayName(key, modifiers) {
 }
 
 /**
- * Checks if an event for that key is configured and if so, runs it.
- * @param {Event} event
- * @private
+ * Returns a keydown event listener for usage with document.addEventListener
+ * 
+ * The 'captureAlways' param is used to return a variant of the event listener.
+ * When captureAlways is 'true', the listener will bypass the normal event bubbling / propagation,
+ * meaning that the listener will fire regardless of whether another DOM element has handled it.
+ * For more information about 'capture', see https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener.
+ *
+ * @param {Boolean} captureAlways Should we always capture the event, bypassing the normal event bubbling/propagation per https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener 
+ * @returns (event: Event) => void
  */
-function bindHandlerToKeydownEvent(event) {
+function keydownEventListenerFn({captureAlways = true}) {
+    return (event) => {
+        bindHandlerToKeydownEvent(event, {captureAlways})
+    }
+}
+
+function bindHandlerToKeydownEvent(event, {captureAlways = true}) {
     if (!(event instanceof KeyboardEvent)) {
         return;
     }
@@ -75,6 +87,12 @@ function bindHandlerToKeydownEvent(event) {
 
     // Loop over all the callbacks
     _.every(eventHandlers[displayName], (callback) => {
+        // Only handle callbacks matching state on 'captureAlways'
+        // to map to the relevant event listener variant
+        if (callback.captureAlways !== captureAlways) {
+            return true;
+        }
+
         // If configured to do so, prevent input text control to trigger this event
         if (!callback.captureOnInputs && (
             event.target.nodeName === 'INPUT'
@@ -103,8 +121,11 @@ function bindHandlerToKeydownEvent(event) {
 }
 
 // Make sure we don't add multiple listeners
-document.removeEventListener('keydown', bindHandlerToKeydownEvent, {capture: true});
-document.addEventListener('keydown', bindHandlerToKeydownEvent, {capture: true});
+document.removeEventListener('keydown', keydownEventListenerFn({captureAlways: true}), {capture: true});
+document.addEventListener('keydown', keydownEventListenerFn({captureAlways: true}), {capture: true});
+
+document.removeEventListener('keydown', keydownEventListenerFn({captureAlways: false}), {capture: false});
+document.addEventListener('keydown', keydownEventListenerFn({captureAlways: false}), {capture: false});
 
 /**
  * Unsubscribes a keyboard event handler.
@@ -141,13 +162,14 @@ function getPlatformEquivalentForKeys(keys) {
  * @param {Function} callback The callback to call
  * @param {String} descriptionKey Translation key for shortcut description
  * @param {Array<String>} [modifiers] Can either be shift or control
+* @param {Boolean} [captureAlways] Should we always capture the event, bypassing the normal event bubbling/propagation per https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener
  * @param {Boolean} [captureOnInputs] Should we capture the event on inputs too?
  * @param {Boolean|Function} [shouldBubble] Should the event bubble?
  * @param {Number} [priority] The position the callback should take in the stack. 0 means top priority, and 1 means less priority than the most recently added.
  * @param {Boolean} [shouldPreventDefault] Should call event.preventDefault after callback?
  * @returns {Function} clean up method
  */
-function subscribe(key, callback, descriptionKey, modifiers = 'shift', captureOnInputs = false, shouldBubble = false, priority = 0, shouldPreventDefault = true) {
+function subscribe(key, callback, descriptionKey, modifiers = 'shift', captureAlways = true, captureOnInputs = false, shouldBubble = false, priority = 0, shouldPreventDefault = true) {
     const platformAdjustedModifiers = getPlatformEquivalentForKeys(modifiers);
     const displayName = getDisplayName(key, platformAdjustedModifiers);
     if (!_.has(eventHandlers, displayName)) {
@@ -158,6 +180,7 @@ function subscribe(key, callback, descriptionKey, modifiers = 'shift', captureOn
     eventHandlers[displayName].splice(priority, 0, {
         id: callbackID,
         callback,
+        captureAlways,
         captureOnInputs,
         shouldPreventDefault,
         shouldBubble,

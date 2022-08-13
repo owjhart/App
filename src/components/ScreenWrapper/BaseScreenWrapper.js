@@ -36,7 +36,7 @@ class BaseScreenWrapper extends React.Component {
             }
 
             Navigation.dismissModal();
-        }, shortcutConfig.descriptionKey, shortcutConfig.modifiers, true);
+        }, shortcutConfig.descriptionKey, shortcutConfig.modifiers, true/*captureAlways*/, true);
 
         this.unsubscribeTransitionEnd = onScreenTransitionEnd(this.props.navigation, () => {
             this.setState({didScreenTransitionEnd: true});
